@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Real vs. AI Photo Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #stats {
+      margin-bottom: 20px;
+      font-size: 1.2em;
+    }
+    #game {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .panel {
+      position: relative;
+      width: 600px;   /* Updated to twice the size */
+      height: 600px;  /* Updated to twice the size */
+      border: 2px solid #ccc;
+      background-color: #fff;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .panel img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: border 0.3s;
+    }
+    .correct {
+      border: 5px solid #4CAF50 !important;
+    }
+    .incorrect {
+      border: 5px solid #F44336 !important;
+    }
+    .label {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 5px 0;
+      font-size: 1em;
+    }
+    #nextBtn {
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Real vs. AI Photo Game</h1>
+  <div id="stats">Correct: 0 | Incorrect: 0</div>
+  <div id="game">
+    <div class="panel" id="leftPanel">
+      <img id="leftImg" src="" alt="Left Image">
+    </div>
+    <div class="panel" id="rightPanel">
+      <img id="rightImg" src="" alt="Right Image">
+    </div>
+  </div>
+  <button id="nextBtn" style="display: none;">Next</button>
+
+  <script>
+    // Predefined arrays of image filenames.
+    // Expand these arrays with the actual filenames in your folders.
+    const realPhotos = [];
+    for (let i = 1; i <= 42; i++) {
+      realPhotos.push(`real${i}.jpg`);
+    }
+    const aiPhotos = [];
+      for (let i = 1; i <= 27; i++) {
+          aiPhotos.push(`ai${i}.jpg`);
+      }
+
+    let correctCount = 0;
+    let incorrectCount = 0;
+    let currentPair = {}; // To track which image is real for this pair.
+    let answered = false;
+
+    const leftPanel = document.getElementById("leftPanel");
+    const rightPanel = document.getElementById("rightPanel");
+    const leftImg = document.getElementById("leftImg");
+    const rightImg = document.getElementById("rightImg");
+    const statsDisplay = document.getElementById("stats");
+    const nextBtn = document.getElementById("nextBtn");
+
+    // Utility: get a random integer between 0 and max-1
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    // Load a new pair of images. One real and one AI.
+    function loadNewPair() {
+      // Clear previous labels and borders
+      clearPanel(leftPanel);
+      clearPanel(rightPanel);
+      nextBtn.style.display = "none";
+      answered = false;
+      
+      // Randomly pick one image from each folder.
+      const realImage = realPhotos[getRandomInt(realPhotos.length)];
+      const aiImage = aiPhotos[getRandomInt(aiPhotos.length)];
+      
+      // Randomize assignment to left/right.
+      if (Math.random() < 0.5) {
+        // Left gets real, right gets AI.
+        leftImg.src = "RealPhotos/" + realImage;
+        rightImg.src = "AIPhotos/" + aiImage;
+        currentPair = { left: "real", right: "ai" };
+      } else {
+        // Left gets AI, right gets real.
+        leftImg.src = "AIPhotos/" + aiImage;
+        rightImg.src = "RealPhotos/" + realImage;
+        currentPair = { left: "ai", right: "real" };
+      }
+    }
+
+    // Clears visual indicators from a panel.
+    function clearPanel(panel) {
+      panel.classList.remove("correct", "incorrect");
+      const label = panel.querySelector(".label");
+      if (label) {
+        panel.removeChild(label);
+      }
+    }
+
+    // Handle user selection.
+    function selectImage(side) {
+      if (answered) return; // Prevent multiple selections
+      answered = true;
+      
+      let chosen, other;
+      if (side === "left") {
+        chosen = leftPanel;
+        other = rightPanel;
+      } else {
+        chosen = rightPanel;
+        other = leftPanel;
+      }
+      
+      // Check if user's selection is correct.
+      if (currentPair[side] === "real") {
+        correctCount++;
+        chosen.classList.add("correct");
+      } else {
+        incorrectCount++;
+        chosen.classList.add("incorrect");
+      }
+      
+      // Show labels for both panels.
+      addLabel(leftPanel, currentPair.left === "real" ? "Real" : "AI");
+      addLabel(rightPanel, currentPair.right === "real" ? "Real" : "AI");
+      
+      // Update stats display.
+      statsDisplay.textContent = `Correct: ${correctCount} | Incorrect: ${incorrectCount}`;
+      
+      // Show next button.
+      nextBtn.style.display = "inline-block";
+    }
+
+    // Adds a label overlay to a panel.
+    function addLabel(panel, text) {
+      const label = document.createElement("div");
+      label.className = "label";
+      label.textContent = text;
+      panel.appendChild(label);
+    }
+
+    // Event listeners for panel clicks.
+    leftPanel.addEventListener("click", () => selectImage("left"));
+    rightPanel.addEventListener("click", () => selectImage("right"));
+
+    // Next button click listener.
+    nextBtn.addEventListener("click", loadNewPair);
+
+    // Initialize game.
+    loadNewPair();
+  </script>
+</body>
+</html>
